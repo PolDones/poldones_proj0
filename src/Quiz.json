@@ -1,0 +1,104 @@
+{
+  "questions": [
+    {
+      "question": "Quina és la velocitat màxima permesa en una autopista a Espanya per a cotxes particulars?",
+      "answers": [
+        "90 km/h",
+        "100 km/h",
+        "120 km/h",
+        "140 km/h"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Què has de fer quan el semàfor està en groc intermitent?",
+      "answers": [
+        "Aturar-te sempre",
+        "Circular amb precaució",
+        "Accelerar per passar ràpid",
+        "Ignorar-lo"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Quan tens un senyal de STOP, què és obligatori fer?",
+      "answers": [
+        "Reduir una mica la velocitat",
+        "Aturar-se completament",
+        "Tocar el clàxon i passar",
+        "Només parar si ve un altre vehicle"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "A quina distància mínima has de posar el triangle d'emergència darrere del vehicle a carreteres interurbanes?",
+      "answers": [
+        "10 metres",
+        "25 metres",
+        "50 metres",
+        "100 metres"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Quin és el límit màxim d'alcohol permès per conductors novells (menys de 2 anys de carnet) a Espanya?",
+      "answers": [
+        "0,0 g/l",
+        "0,15 g/l",
+        "0,3 g/l",
+        "0,5 g/l"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Quan tens prioritat en una rotonda?",
+      "answers": [
+        "Sempre el que entra té prioritat",
+        "Sempre el que ja està dins té prioritat",
+        "Depèn de la mida del vehicle",
+        "No hi ha norma"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Quina és la posició correcta de les mans al volant segons les recomanacions generals?",
+      "answers": [
+        "A les 12 en punt",
+        "A les 3 i les 9",
+        "A les 6 i les 12",
+        "A les 4 i les 8"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Quin és el significat del senyal triangular amb un dibuix de nen corrent?",
+      "answers": [
+        "Entrada d'escola",
+        "Zona esportiva",
+        "Zona de jocs",
+        "Pas de vianants"
+      ],
+      "correctIndex": 0
+    },
+    {
+      "question": "Quan es pot avançar per la dreta en una via de dos carrils en el mateix sentit?",
+      "answers": [
+        "Mai",
+        "Només si el vehicle de l'esquerra gira a l'esquerra",
+        "Quan tens pressa",
+        "Sempre que vulguis"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Quin color de llums s’ha d’utilitzar obligatòriament de nit en carreteres sense il·luminació?",
+      "answers": [
+        "Llums de posició",
+        "Llums de carretera (llarg abast)",
+        "Llums antiboira",
+        "Llums interiors"
+      ],
+      "correctIndex": 1
+    }
+  ]
+}
