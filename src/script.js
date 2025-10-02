@@ -1,6 +1,8 @@
 let preguntesOriginals = [];
+let respostesSeleccionades = [];
 let tempsInici = null;
 let interval = null;
+let preguntaActual = 0;
 const tempsTotal = 10 * 60 * 1000;
 
 function formatTemps(ms) {
@@ -14,7 +16,6 @@ function actualitzarTemporitzador() {
   const ara = Date.now();
   const restant = Math.max(0, tempsTotal - (ara - tempsInici));
   document.getElementById('temporitzador').innerText = `Temps restant: ${formatTemps(restant)}`;
-
   if (restant <= 0) {
     clearInterval(interval);
     enviarRespostes();
@@ -28,12 +29,47 @@ function shuffle(array) {
   }
 }
 
-function actualitzarResum() {
-  const resum = preguntesOriginals.map((_, index) => {
-    const seleccionada = document.querySelector(`input[name="pregunta${index}"]:checked`);
-    return `pregunta${index + 1}: ${seleccionada ? seleccionada.value : '-'}`;
+function mostrarPregunta(index) {
+  const container = document.getElementById('preguntes');
+  container.innerHTML = '';
+  const pregunta = preguntesOriginals[index];
+
+  const bloc = document.createElement('div');
+  bloc.classList.add('card', 'mb-4', 'p-3', 'shadow-sm');
+  bloc.innerHTML = `<p class="fw-bold">${index + 1}. ${pregunta.question}</p>`;
+
+  if (pregunta.image) {
+    bloc.innerHTML += `<img src="${pregunta.image}" alt="Imatge" class="imatge-pregunta"><br>`;
+  }
+
+  const respostesBarrejades = [...pregunta.answers];
+  shuffle(respostesBarrejades);
+
+  respostesBarrejades.forEach((resposta, i) => {
+    const id = `pregunta${index}_resposta${i}`;
+    const valorOriginal = pregunta.answers.indexOf(resposta);
+    const checked = respostesSeleccionades[index] === valorOriginal ? 'checked' : '';
+    bloc.innerHTML += `
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="pregunta" value="${valorOriginal}" id="${id}" ${checked}>
+        <label class="form-check-label" for="${id}">${resposta}</label>
+      </div>
+    `;
   });
-  document.getElementById('resum').innerText = resum.join('\n');
+
+  container.appendChild(bloc);
+
+  document.getElementById('anterior').disabled = index === 0;
+  document.getElementById('seguent').style.display = index === preguntesOriginals.length - 1 ? 'none' : 'inline-block';
+  document.getElementById('enviar').style.display = index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
+
+  setTimeout(() => {
+    document.querySelectorAll('input[name="pregunta"]').forEach(input => {
+      input.addEventListener('change', () => {
+        respostesSeleccionades[index] = parseInt(input.value);
+      });
+    });
+  }, 100);
 }
 
 function iniciarJoc() {
@@ -41,8 +77,7 @@ function iniciarJoc() {
     .then(res => res.json())
     .then(preguntes => {
       preguntesOriginals = preguntes;
-      const container = document.getElementById('preguntes');
-      container.innerHTML = '';
+      respostesSeleccionades = Array(preguntes.length).fill(null);
       document.getElementById('resultat').innerText = '';
       document.getElementById('reiniciar').style.display = 'none';
 
@@ -50,53 +85,17 @@ function iniciarJoc() {
       interval = setInterval(actualitzarTemporitzador, 1000);
       actualitzarTemporitzador();
 
-      preguntes.forEach((pregunta, index) => {
-        const bloc = document.createElement('div');
-        bloc.classList.add('card', 'mb-4', 'p-3', 'shadow-sm');
-        bloc.innerHTML = `<p class="fw-bold">${index + 1}. ${pregunta.question}</p>`;
-
-        if (pregunta.image) {
-          bloc.innerHTML += `<img src="${pregunta.image}" alt="Imatge" class="img-fluid mb-2"><br>`;
-        }
-
-        const respostesBarrejades = [...pregunta.answers];
-        shuffle(respostesBarrejades);
-
-        respostesBarrejades.forEach((resposta, i) => {
-          const id = `pregunta${index}_resposta${i}`;
-          const valorOriginal = pregunta.answers.indexOf(resposta);
-          bloc.innerHTML += `
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="pregunta${index}" value="${valorOriginal}" id="${id}">
-              <label class="form-check-label" for="${id}">${resposta}</label>
-            </div>
-          `;
-        });
-
-        container.appendChild(bloc);
-      });
-
       document.getElementById('formulari').style.display = 'block';
       document.getElementById('comencar').style.display = 'none';
-
-      setTimeout(() => {
-        document.querySelectorAll('input[type="radio"]').forEach(input => {
-          input.addEventListener('change', actualitzarResum);
-        });
-        actualitzarResum();
-      }, 100);
+      document.getElementById('titol').style.display = 'none';
+      mostrarPregunta(0);
     });
 }
 
 function enviarRespostes() {
-  const respostes = preguntesOriginals.map((_, index) => {
-    const seleccionada = document.querySelector(`input[name="pregunta${index}"]:checked`);
-    return seleccionada ? parseInt(seleccionada.value) : null;
-  });
-
   const dades = {};
   preguntesOriginals.forEach((pregunta, index) => {
-    dades[pregunta.id] = respostes[index];
+    dades[pregunta.id] = respostesSeleccionades[index];
   });
 
   fetch('finalitza.php', {
@@ -104,27 +103,41 @@ function enviarRespostes() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ respostes: dades })
   })
-  .then(res => res.json())
-  .then(resultat => {
-    const tempsFinal = Date.now();
-    const tempsTrencat = tempsFinal - tempsInici;
-    const segonsTrencats = Math.floor(tempsTrencat / 1000);
-    const segonsRestants = Math.max(0, Math.floor((tempsTotal - tempsTrencat) / 1000));
+    .then(res => res.json())
+    .then(resultat => {
+      const tempsFinal = Date.now();
+      const tempsTrencat = tempsFinal - tempsInici;
+      const segonsTrencats = Math.floor(tempsTrencat / 1000);
+      const segonsRestants = Math.max(0, Math.floor((tempsTotal - tempsTrencat) / 1000));
 
-    document.getElementById('resultat').innerHTML =
-      `<div class="alert alert-success">
-        <p>✅ Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
-        <p>⏱️ Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
-        <p>⌛ Temps restant: ${Math.floor(segonsRestants / 60)} min ${segonsRestants % 60} s</p>
-      </div>`;
+      document.getElementById('resultat').innerHTML =
+        `<div class="alert alert-success">
+          <p>Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
+          <p>Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
+          <p>Temps restant: ${Math.floor(segonsRestants / 60)} min ${segonsRestants % 60} s</p>
+        </div>`;
 
-    document.getElementById('formulari').style.display = 'none';
-    document.getElementById('reiniciar').style.display = 'inline';
-    clearInterval(interval);
-  });
+      document.getElementById('formulari').style.display = 'none';
+      document.getElementById('reiniciar').style.display = 'inline';
+      clearInterval(interval);
+    });
 }
 
 document.getElementById('comencar').addEventListener('click', iniciarJoc);
+
+document.getElementById('anterior').addEventListener('click', () => {
+  if (preguntaActual > 0) {
+    preguntaActual--;
+    mostrarPregunta(preguntaActual);
+  }
+});
+
+document.getElementById('seguent').addEventListener('click', () => {
+  if (preguntaActual < preguntesOriginals.length - 1) {
+    preguntaActual++;
+    mostrarPregunta(preguntaActual);
+  }
+});
 
 document.getElementById('formulari').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -138,4 +151,8 @@ document.getElementById('reiniciar').addEventListener('click', () => {
   document.getElementById('resultat').innerText = '';
   document.getElementById('resum').innerText = '';
   document.getElementById('temporitzador').innerText = 'Temps restant: 10:00';
+  document.getElementById('preguntes').innerHTML = '';
+  document.getElementById('formulari').style.display = 'none';
+  document.getElementById('titol').style.display = 'block';
+  preguntaActual = 0;
 });

@@ -1,0 +1,66 @@
+/* Estils globals */
+body {
+  background-color: #f8f9fa;
+}
+
+/* Navegació adaptativa */
+#navegacio {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  #navegacio {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background: white;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  #navegacio .btn {
+    width: 48%;
+  }
+
+  #enviar {
+    margin-bottom: 4rem; /* espai per evitar que quedi sota els botons fixos */
+  }
+}
+
+@media (min-width: 769px) {
+  #navegacio {
+    position: static;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  #navegacio .btn {
+    width: auto;
+  }
+}
+
+.imatge-pregunta {
+  display: block;
+  margin: 0 auto 1rem auto;
+  object-fit: contain;
+}
+
+/* Vista mòbil */
+@media (max-width: 768px) {
+  .imatge-pregunta {
+    width: 100%;
+    max-height: 300px;
+  }
+}
+
+/* Vista ordinador */
+@media (min-width: 769px) {
+  .imatge-pregunta {
+    max-width: 400px;
+    max-height: 250px;
+  }
+}
