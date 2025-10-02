@@ -1,30 +1,35 @@
 <?php
-// Aquesta API rep les respostes de l'usuari i calcula quantes són correctes
+require 'connexio.php';
 
-header('Content-Type: application/json');
-
-// Llegim les respostes enviades pel frontend
+// Llegim el cos JSON
 $input = json_decode(file_get_contents("php://input"), true);
-$respostesUsuari = $input['respostes'] ?? [];
 
-// Llegim el fitxer JSON original
-$json = file_get_contents("Quiz.json");
-$data = json_decode($json, true);
-$preguntes = $data['questions'];
-
-$total = count($respostesUsuari);
-$correctes = 0;
-
-// Comprovem cada resposta
-foreach ($respostesUsuari as $i => $resposta) {
-    if (!isset($preguntes[$i])) continue;
-    if ($preguntes[$i]['correctIndex'] == $resposta) {
-        $correctes++;
-    }
+// Validem que hi ha respostes
+if (!isset($input['respostes']) || !is_array($input['respostes'])) {
+  http_response_code(400);
+  echo json_encode(['error' => 'Dades incorrectes']);
+  exit;
 }
 
-// Enviem el resultat com a JSON
+$respostes = $input['respostes'];
+$correctes = 0;
+$total = count($respostes);
+
+// Recorrem cada pregunta
+foreach ($respostes as $pregunta_id => $resposta_index) {
+  // Obtenim totes les respostes d'aquesta pregunta ordenades
+  $stmt = $pdo->prepare("SELECT es_correcta FROM respostes WHERE pregunta_id = ? ORDER BY id");
+  $stmt->execute([$pregunta_id]);
+  $opcions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+  // Comprovem si la resposta seleccionada és correcta
+  if (isset($opcions[$resposta_index]) && $opcions[$resposta_index] == 1) {
+    $correctes++;
+  }
+}
+
+// Retornem el resultat
 echo json_encode([
-    'total' => $total,
-    'correctes' => $correctes
+  'correctes' => $correctes,
+  'total' => $total
 ]);

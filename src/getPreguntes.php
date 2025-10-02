@@ -1,25 +1,25 @@
 <?php
-// Aquesta API retorna preguntes aleatòries sense la resposta correcta
+require 'connexio.php';
 
-header('Content-Type: application/json');
+$n = isset($_GET['n']) ? intval($_GET['n']) : 10;
+$n = max(1, min($n, 100));
 
-// Nombre de preguntes demanades
-$num = isset($_GET['num']) ? intval($_GET['num']) : 10;
+$stmt = $pdo->query("SELECT * FROM preguntes ORDER BY RAND() LIMIT $n");
+$preguntes = $stmt->fetchAll();
 
-// Llegim el fitxer JSON
-$json = file_get_contents("Quiz.json");
-$data = json_decode($json, true);
-$preguntes = $data['questions'];
-
-// Seleccionem preguntes aleatòries
-$seleccionades = array_rand($preguntes, $num);
 $resultat = [];
 
-foreach ($seleccionades as $i) {
-    $p = $preguntes[$i];
-    unset($p['correctIndex']); // Eliminem la resposta correcta
-    $resultat[] = $p;
+foreach ($preguntes as $p) {
+  $respostes = $pdo->prepare("SELECT text FROM respostes WHERE pregunta_id = ?");
+  $respostes->execute([$p['id']]);
+  $opcions = $respostes->fetchAll(PDO::FETCH_COLUMN);
+
+  $resultat[] = [
+    'id' => $p['id'],
+    'question' => $p['text'],
+    'image' => $p['image_url'],
+    'answers' => $opcions
+  ];
 }
 
-// Enviem les preguntes com a JSON
 echo json_encode($resultat);

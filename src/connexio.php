@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db   = 'quiz';
-$user = 'root';
-$pass = '';
+$db   = 'a22poldonrod_proj0';
+$user = 'a22poldonrod_admin_proj0';
+$pass = 'u84HPK#p8u4+5Iw)';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
