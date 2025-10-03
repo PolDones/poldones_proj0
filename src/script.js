@@ -1,9 +1,9 @@
 let preguntesOriginals = [];
 let respostesSeleccionades = [];
 let tempsInici = null;
-let interval = null;
 let preguntaActual = 0;
-const tempsTotal = 10 * 60 * 1000;
+const tempsTotal = 30 * 1000; // 30 segons
+let animacioActiva = false;
 
 function formatTemps(ms) {
   const s = Math.floor(ms / 1000);
@@ -13,13 +13,27 @@ function formatTemps(ms) {
 }
 
 function actualitzarTemporitzador() {
+  if (!animacioActiva) return;
+
   const ara = Date.now();
   const restant = Math.max(0, tempsTotal - (ara - tempsInici));
+  const percentatge = ((tempsTotal - restant) / tempsTotal) * 100;
+
   document.getElementById('temporitzador').innerText = `Temps restant: ${formatTemps(restant)}`;
+  document.getElementById('barra-progres').style.width = `${percentatge}%`;
+
   if (restant <= 0) {
-    clearInterval(interval);
+    animacioActiva = false;
     enviarRespostes();
+    return;
   }
+
+  requestAnimationFrame(actualitzarTemporitzador);
+}
+
+function actualitzarIndicador() {
+  const total = preguntesOriginals.length;
+  document.getElementById('indicador').innerText = `Pregunta ${preguntaActual + 1}/${total}`;
 }
 
 function shuffle(array) {
@@ -30,12 +44,15 @@ function shuffle(array) {
 }
 
 function mostrarPregunta(index) {
+  preguntaActual = index;
+  actualitzarIndicador();
+
   const container = document.getElementById('preguntes');
   container.innerHTML = '';
   const pregunta = preguntesOriginals[index];
 
   const bloc = document.createElement('div');
-  bloc.classList.add('card', 'mb-4', 'p-3', 'shadow-sm');
+  bloc.classList.add('bloc-pregunta', 'card', 'mb-4', 'p-3', 'shadow-sm');
   bloc.innerHTML = `<p class="fw-bold">${index + 1}. ${pregunta.question}</p>`;
 
   if (pregunta.image) {
@@ -82,8 +99,11 @@ function iniciarJoc() {
       document.getElementById('reiniciar').style.display = 'none';
 
       tempsInici = Date.now();
-      interval = setInterval(actualitzarTemporitzador, 1000);
-      actualitzarTemporitzador();
+      animacioActiva = true;
+      requestAnimationFrame(actualitzarTemporitzador); // ✅ crida correcta
+
+      document.getElementById('barra-superior').style.display = 'flex';
+      document.querySelector('.progress').style.display = 'block';
 
       document.getElementById('formulari').style.display = 'block';
       document.getElementById('comencar').style.display = 'none';
@@ -97,6 +117,10 @@ function enviarRespostes() {
   preguntesOriginals.forEach((pregunta, index) => {
     dades[pregunta.id] = respostesSeleccionades[index];
   });
+
+  // 🔻 Oculta barra, temps i indicador
+  document.getElementById('barra-superior').style.display = 'none';
+  document.querySelector('.progress').style.display = 'none';
 
   fetch('finalitza.php', {
     method: 'POST',
@@ -112,14 +136,13 @@ function enviarRespostes() {
 
       document.getElementById('resultat').innerHTML =
         `<div class="alert alert-success">
-          <p>Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
-          <p>Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
-          <p>Temps restant: ${Math.floor(segonsRestants / 60)} min ${segonsRestants % 60} s</p>
+          <p>✅ Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
+          <p>⏱️ Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
+          <p>⌛ Temps restant: ${Math.floor(segonsRestants / 60)} min ${segonsRestants % 60} s</p>
         </div>`;
 
       document.getElementById('formulari').style.display = 'none';
       document.getElementById('reiniciar').style.display = 'inline';
-      clearInterval(interval);
     });
 }
 
@@ -127,21 +150,19 @@ document.getElementById('comencar').addEventListener('click', iniciarJoc);
 
 document.getElementById('anterior').addEventListener('click', () => {
   if (preguntaActual > 0) {
-    preguntaActual--;
-    mostrarPregunta(preguntaActual);
+    mostrarPregunta(preguntaActual - 1);
   }
 });
 
 document.getElementById('seguent').addEventListener('click', () => {
   if (preguntaActual < preguntesOriginals.length - 1) {
-    preguntaActual++;
-    mostrarPregunta(preguntaActual);
+    mostrarPregunta(preguntaActual + 1);
   }
 });
 
 document.getElementById('formulari').addEventListener('submit', (e) => {
   e.preventDefault();
-  clearInterval(interval);
+  animacioActiva = false;
   enviarRespostes();
 });
 
@@ -150,9 +171,12 @@ document.getElementById('reiniciar').addEventListener('click', () => {
   document.getElementById('reiniciar').style.display = 'none';
   document.getElementById('resultat').innerText = '';
   document.getElementById('resum').innerText = '';
-  document.getElementById('temporitzador').innerText = 'Temps restant: 10:00';
+  document.getElementById('temporitzador').innerText = 'Temps restant: 00:30';
+  document.getElementById('barra-progres').style.width = '0%';
   document.getElementById('preguntes').innerHTML = '';
   document.getElementById('formulari').style.display = 'none';
   document.getElementById('titol').style.display = 'block';
+  document.getElementById('barra-superior').style.display = 'flex';
+  document.querySelector('.progress').style.display = 'block';
   preguntaActual = 0;
 });

@@ -3,6 +3,37 @@ body {
   background-color: #f8f9fa;
 }
 
+/* Barra superior amb indicador i temporitzador */
+#barra-superior {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#indicador {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+#temporitzador {
+  font-weight: 600;
+  color: #0d6efd;
+  text-align: right;
+}
+
+/* Barra de progrés */
+.progress {
+  height: 8px;
+  background-color: #e9ecef;
+}
+
+.progress-bar {
+  transition: width 0.5s ease;
+}
+
 /* Navegació adaptativa */
 #navegacio {
   margin-top: 1rem;
@@ -27,7 +58,12 @@ body {
   }
 
   #enviar {
-    margin-bottom: 4rem; /* espai per evitar que quedi sota els botons fixos */
+    margin-bottom: 4rem;
+  }
+
+  .imatge-pregunta {
+    width: 100%;
+    max-height: 300px;
   }
 }
 
@@ -41,26 +77,22 @@ body {
   #navegacio .btn {
     width: auto;
   }
+
+  .imatge-pregunta {
+    max-width: 400px;
+    max-height: 250px;
+    width: 100%;
+  }
+
+  .bloc-pregunta {
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+  }
 }
 
+/* Imatges de les preguntes */
 .imatge-pregunta {
   display: block;
   margin: 0 auto 1rem auto;
   object-fit: contain;
-}
-
-/* Vista mòbil */
-@media (max-width: 768px) {
-  .imatge-pregunta {
-    width: 100%;
-    max-height: 300px;
-  }
-}
-
-/* Vista ordinador */
-@media (min-width: 769px) {
-  .imatge-pregunta {
-    max-width: 400px;
-    max-height: 250px;
-  }
 }
