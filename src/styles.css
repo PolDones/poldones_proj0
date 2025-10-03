@@ -96,3 +96,12 @@ body {
   margin: 0 auto 1rem auto;
   object-fit: contain;
 }
+
+@keyframes avancaBarra {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.progress-bar.animada {
+  animation: avancaBarra 30s linear forwards;
+}

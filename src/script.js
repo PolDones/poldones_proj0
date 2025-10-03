@@ -3,7 +3,7 @@ let respostesSeleccionades = [];
 let tempsInici = null;
 let preguntaActual = 0;
 const tempsTotal = 30 * 1000; // 30 segons
-let animacioActiva = false;
+let temporitzadorTimeout = null;
 
 function formatTemps(ms) {
   const s = Math.floor(ms / 1000);
@@ -13,22 +13,15 @@ function formatTemps(ms) {
 }
 
 function actualitzarTemporitzador() {
-  if (!animacioActiva) return;
-
   const ara = Date.now();
   const restant = Math.max(0, tempsTotal - (ara - tempsInici));
-  const percentatge = ((tempsTotal - restant) / tempsTotal) * 100;
-
   document.getElementById('temporitzador').innerText = `Temps restant: ${formatTemps(restant)}`;
-  document.getElementById('barra-progres').style.width = `${percentatge}%`;
 
   if (restant <= 0) {
-    animacioActiva = false;
     enviarRespostes();
-    return;
+  } else {
+    setTimeout(actualitzarTemporitzador, 1000);
   }
-
-  requestAnimationFrame(actualitzarTemporitzador);
 }
 
 function actualitzarIndicador() {
@@ -99,11 +92,12 @@ function iniciarJoc() {
       document.getElementById('reiniciar').style.display = 'none';
 
       tempsInici = Date.now();
-      animacioActiva = true;
-      requestAnimationFrame(actualitzarTemporitzador); // ✅ crida correcta
+      temporitzadorTimeout = setTimeout(enviarRespostes, tempsTotal);
+      actualitzarTemporitzador();
 
       document.getElementById('barra-superior').style.display = 'flex';
       document.querySelector('.progress').style.display = 'block';
+      document.getElementById('barra-progres').classList.add('animada');
 
       document.getElementById('formulari').style.display = 'block';
       document.getElementById('comencar').style.display = 'none';
@@ -113,14 +107,16 @@ function iniciarJoc() {
 }
 
 function enviarRespostes() {
+  clearTimeout(temporitzadorTimeout);
+
+  document.getElementById('barra-superior').style.display = 'none';
+  document.querySelector('.progress').style.display = 'none';
+  document.getElementById('barra-progres').classList.remove('animada');
+
   const dades = {};
   preguntesOriginals.forEach((pregunta, index) => {
     dades[pregunta.id] = respostesSeleccionades[index];
   });
-
-  // 🔻 Oculta barra, temps i indicador
-  document.getElementById('barra-superior').style.display = 'none';
-  document.querySelector('.progress').style.display = 'none';
 
   fetch('finalitza.php', {
     method: 'POST',
@@ -162,17 +158,18 @@ document.getElementById('seguent').addEventListener('click', () => {
 
 document.getElementById('formulari').addEventListener('submit', (e) => {
   e.preventDefault();
-  animacioActiva = false;
   enviarRespostes();
 });
 
 document.getElementById('reiniciar').addEventListener('click', () => {
+  clearTimeout(temporitzadorTimeout);
   document.getElementById('comencar').style.display = 'inline';
   document.getElementById('reiniciar').style.display = 'none';
   document.getElementById('resultat').innerText = '';
   document.getElementById('resum').innerText = '';
   document.getElementById('temporitzador').innerText = 'Temps restant: 00:30';
   document.getElementById('barra-progres').style.width = '0%';
+  document.getElementById('barra-progres').classList.remove('animada');
   document.getElementById('preguntes').innerHTML = '';
   document.getElementById('formulari').style.display = 'none';
   document.getElementById('titol').style.display = 'block';
