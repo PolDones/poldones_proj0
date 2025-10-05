@@ -2,8 +2,15 @@ let preguntesOriginals = [];
 let respostesSeleccionades = [];
 let tempsInici = null;
 let preguntaActual = 0;
-const tempsTotal = 30 * 1000; // 30 segons
+const tempsTotal = 30 * 1000;
 let temporitzadorTimeout = null;
+let nomUsuari = '';
+
+// Activar botó "Comença" només si hi ha nom
+document.getElementById('nom').addEventListener('input', (e) => {
+  nomUsuari = e.target.value.trim();
+  document.getElementById('comencar').disabled = nomUsuari === '';
+});
 
 function formatTemps(ms) {
   const s = Math.floor(ms / 1000);
@@ -16,12 +23,7 @@ function actualitzarTemporitzador() {
   const ara = Date.now();
   const restant = Math.max(0, tempsTotal - (ara - tempsInici));
   document.getElementById('temporitzador').innerText = `Temps restant: ${formatTemps(restant)}`;
-
-  if (restant <= 0) {
-    enviarRespostes();
-  } else {
-    setTimeout(actualitzarTemporitzador, 1000);
-  }
+  if (restant > 0) setTimeout(actualitzarTemporitzador, 1000);
 }
 
 function actualitzarIndicador() {
@@ -39,22 +41,17 @@ function shuffle(array) {
 function mostrarPregunta(index) {
   preguntaActual = index;
   actualitzarIndicador();
-
   const container = document.getElementById('preguntes');
   container.innerHTML = '';
   const pregunta = preguntesOriginals[index];
-
   const bloc = document.createElement('div');
   bloc.classList.add('bloc-pregunta', 'card', 'mb-4', 'p-3', 'shadow-sm');
   bloc.innerHTML = `<p class="fw-bold">${index + 1}. ${pregunta.question}</p>`;
-
   if (pregunta.image) {
     bloc.innerHTML += `<img src="${pregunta.image}" alt="Imatge" class="imatge-pregunta"><br>`;
   }
-
   const respostesBarrejades = [...pregunta.answers];
   shuffle(respostesBarrejades);
-
   respostesBarrejades.forEach((resposta, i) => {
     const id = `pregunta${index}_resposta${i}`;
     const valorOriginal = pregunta.answers.indexOf(resposta);
@@ -66,13 +63,10 @@ function mostrarPregunta(index) {
       </div>
     `;
   });
-
   container.appendChild(bloc);
-
   document.getElementById('anterior').disabled = index === 0;
   document.getElementById('seguent').style.display = index === preguntesOriginals.length - 1 ? 'none' : 'inline-block';
   document.getElementById('enviar').style.display = index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
-
   setTimeout(() => {
     document.querySelectorAll('input[name="pregunta"]').forEach(input => {
       input.addEventListener('change', () => {
@@ -90,55 +84,70 @@ function iniciarJoc() {
       respostesSeleccionades = Array(preguntes.length).fill(null);
       document.getElementById('resultat').innerText = '';
       document.getElementById('reiniciar').style.display = 'none';
-
       tempsInici = Date.now();
       temporitzadorTimeout = setTimeout(enviarRespostes, tempsTotal);
       actualitzarTemporitzador();
-
       document.getElementById('barra-superior').style.display = 'flex';
       document.querySelector('.progress').style.display = 'block';
+      document.getElementById('barra-progres').classList.remove('animada');
+      void document.getElementById('barra-progres').offsetWidth;
       document.getElementById('barra-progres').classList.add('animada');
-
       document.getElementById('formulari').style.display = 'block';
       document.getElementById('comencar').style.display = 'none';
       document.getElementById('titol').style.display = 'none';
+      document.getElementById('intro').style.display = 'none';
       mostrarPregunta(0);
     });
 }
 
 function enviarRespostes() {
   clearTimeout(temporitzadorTimeout);
-
   document.getElementById('barra-superior').style.display = 'none';
   document.querySelector('.progress').style.display = 'none';
   document.getElementById('barra-progres').classList.remove('animada');
-
   const dades = {};
   preguntesOriginals.forEach((pregunta, index) => {
     dades[pregunta.id] = respostesSeleccionades[index];
   });
-
   fetch('finalitza.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ respostes: dades })
+    body: JSON.stringify({
+      nom: nomUsuari,
+      respostes: dades,
+      temps: Date.now() - tempsInici
+    })
   })
     .then(res => res.json())
     .then(resultat => {
-      const tempsFinal = Date.now();
-      const tempsTrencat = tempsFinal - tempsInici;
-      const segonsTrencats = Math.floor(tempsTrencat / 1000);
-      const segonsRestants = Math.max(0, Math.floor((tempsTotal - tempsTrencat) / 1000));
-
+      const segonsTrencats = Math.floor((Date.now() - tempsInici) / 1000);
       document.getElementById('resultat').innerHTML =
         `<div class="alert alert-success">
           <p>✅ Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
           <p>⏱️ Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
-          <p>⌛ Temps restant: ${Math.floor(segonsRestants / 60)} min ${segonsRestants % 60} s</p>
         </div>`;
-
       document.getElementById('formulari').style.display = 'none';
       document.getElementById('reiniciar').style.display = 'inline';
+      mostrarRanking();
+    });
+}
+
+function mostrarRanking() {
+  fetch('ranking.php')
+    .then(res => res.json())
+    .then(ranking => {
+      if (!Array.isArray(ranking) || ranking.length === 0) return;
+
+      let html = '<h2>🏆 Rànquing dels 10 millors</h2><ol>';
+      ranking.forEach(r => {
+        const segons = Math.floor(r.temps / 1000);
+        html += `<li><strong>${r.nom}</strong> — ${r.puntuacio} punts — ${segons}s</li>`;
+      });
+      html += '</ol>';
+      document.getElementById('resultat').innerHTML += html;
+    })
+    .catch(err => {
+      console.error('Error carregant el rànquing:', err);
     });
 }
 
@@ -164,6 +173,8 @@ document.getElementById('formulari').addEventListener('submit', (e) => {
 document.getElementById('reiniciar').addEventListener('click', () => {
   clearTimeout(temporitzadorTimeout);
   document.getElementById('comencar').style.display = 'inline';
+  document.getElementById('titol').style.display = 'block';
+  document.getElementById('intro').style.display = 'block';
   document.getElementById('reiniciar').style.display = 'none';
   document.getElementById('resultat').innerText = '';
   document.getElementById('resum').innerText = '';
@@ -172,8 +183,7 @@ document.getElementById('reiniciar').addEventListener('click', () => {
   document.getElementById('barra-progres').classList.remove('animada');
   document.getElementById('preguntes').innerHTML = '';
   document.getElementById('formulari').style.display = 'none';
-  document.getElementById('titol').style.display = 'block';
-  document.getElementById('barra-superior').style.display = 'flex';
-  document.querySelector('.progress').style.display = 'block';
+  document.getElementById('barra-superior').style.display = 'none';
+  document.querySelector('.progress').style.display = 'none';
   preguntaActual = 0;
 });
