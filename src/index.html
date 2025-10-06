@@ -2,41 +2,58 @@
 <html lang="ca">
 <head>
   <meta charset="UTF-8">
+  <title>Qüestionari</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Test Autoescola</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1 id="titol">Benvingut al test!</h1>
+  <div class="contenidor">
+    <h2 id="titol">Qüestionari</h2>
+    <p id="intro" style="color: red; font-weight: bold;">Aquesta és la versió actual del qüestionari</p>
 
-  <div id="intro">
-    <label for="nom">Introdueix el teu nom:</label>
-    <input type="text" id="nom" name="nom" required>
-  </div>
+    <!-- Formulari d'inici -->
+    <form id="formular-inici">
+      <input type="text" id="nom" placeholder="Introdueix el teu nom" required>
+      <button type="button" id="comencar" disabled>🎯 Comença</button>
+    </form>
 
-  <button id="comencar" disabled>Comença</button>
+    <!-- Formulari del test -->
+    <form id="formulari" style="display:none;">
+      <!-- Barra superior -->
+      <div id="barra-superior">
+        <span id="indicador">Pregunta 1 de 10</span>
+        <span id="temporitzador">Temps restant: 00:30</span>
+      </div>
 
-  <div id="barra-superior">
-    <div id="indicador">Pregunta 1/10</div>
-    <div id="temporitzador">Temps restant: 00:30</div>
-  </div>
+      <!-- Barra de progrés -->
+      <div class="progress">
+        <div id="barra-progres" class="progress-bar"></div>
+      </div>
 
-  <div class="progress">
-    <div id="barra-progres" class="progress-bar bg-primary" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
-  </div>
+      <!-- Preguntes -->
+      <div id="preguntes">
+        <!-- Aquí es carregaran les preguntes -->
+      </div>
 
-  <form id="formulari" style="display: none;">
-    <div id="preguntes"></div>
-    <div id="navegacio">
-      <button type="button" id="anterior" class="btn">Anterior</button>
-      <button type="button" id="seguent" class="btn">Següent</button>
-      <button type="submit" id="enviar" class="btn" style="display: none;">Enviar</button>
+      <!-- Navegació -->
+      <div id="navegacio">
+        <button type="button" id="anterior" class="btn">⬅️ Enrere</button>
+        <button type="button" id="seguent" class="btn">Següent ➡️</button>
+        <button type="submit" id="enviar" class="btn">Enviar</button>
+      </div>
+    </form>
+
+    <!-- Resultat -->
+    <div id="resultat" style="display:none;">
+      <h3>Resultats</h3>
+      <div id="resum"></div>
+      <ol></ol>
+      <div id="ranking">
+        <!-- Aquí es mostrarà el rànquing -->
+      </div>
+      <button id="reiniciar" style="display:none;">🔄 Torna a començar</button>
     </div>
-  </form>
-
-  <div id="resultat"></div>
-  
-  <button id="reiniciar" style="display: none;">Torna a començar</button>
+  </div>
 
   <script src="script.js"></script>
 </body>

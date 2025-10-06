@@ -12,6 +12,8 @@ document.getElementById('nom').addEventListener('input', (e) => {
   document.getElementById('comencar').disabled = nomUsuari === '';
 });
 
+document.getElementById('comencar').addEventListener('click', iniciarJoc);
+
 function formatTemps(ms) {
   const s = Math.floor(ms / 1000);
   const min = Math.floor(s / 60);
@@ -23,7 +25,12 @@ function actualitzarTemporitzador() {
   const ara = Date.now();
   const restant = Math.max(0, tempsTotal - (ara - tempsInici));
   document.getElementById('temporitzador').innerText = `Temps restant: ${formatTemps(restant)}`;
-  if (restant > 0) setTimeout(actualitzarTemporitzador, 1000);
+  if (restant > 0) {
+    setTimeout(actualitzarTemporitzador, 1000);
+  } else {
+    document.getElementById('temporitzador').classList.add('final');
+    enviarRespostes();
+  }
 }
 
 function actualitzarIndicador() {
@@ -45,8 +52,8 @@ function mostrarPregunta(index) {
   container.innerHTML = '';
   const pregunta = preguntesOriginals[index];
   const bloc = document.createElement('div');
-  bloc.classList.add('bloc-pregunta', 'card', 'mb-4', 'p-3', 'shadow-sm');
-  bloc.innerHTML = `<p class="fw-bold">${index + 1}. ${pregunta.question}</p>`;
+  bloc.classList.add('bloc-pregunta');
+  bloc.innerHTML = `<p><strong>${index + 1}. ${pregunta.question}</strong></p>`;
   if (pregunta.image) {
     bloc.innerHTML += `<img src="${pregunta.image}" alt="Imatge" class="imatge-pregunta"><br>`;
   }
@@ -67,6 +74,7 @@ function mostrarPregunta(index) {
   document.getElementById('anterior').disabled = index === 0;
   document.getElementById('seguent').style.display = index === preguntesOriginals.length - 1 ? 'none' : 'inline-block';
   document.getElementById('enviar').style.display = index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
+
   setTimeout(() => {
     document.querySelectorAll('input[name="pregunta"]').forEach(input => {
       input.addEventListener('change', () => {
@@ -80,6 +88,10 @@ function iniciarJoc() {
   fetch('getPreguntes.php?n=10')
     .then(res => res.json())
     .then(preguntes => {
+      if (!Array.isArray(preguntes) || preguntes.length === 0) {
+        alert('No s’han pogut carregar les preguntes.');
+        return;
+      }
       preguntesOriginals = preguntes;
       respostesSeleccionades = Array(preguntes.length).fill(null);
       document.getElementById('resultat').innerText = '';
@@ -93,10 +105,14 @@ function iniciarJoc() {
       void document.getElementById('barra-progres').offsetWidth;
       document.getElementById('barra-progres').classList.add('animada');
       document.getElementById('formulari').style.display = 'block';
-      document.getElementById('comencar').style.display = 'none';
+      document.getElementById('formular-inici').style.display = 'none';
       document.getElementById('titol').style.display = 'none';
       document.getElementById('intro').style.display = 'none';
       mostrarPregunta(0);
+    })
+    .catch(err => {
+      console.error('Error carregant preguntes:', err);
+      alert('Error de connexió amb el servidor.');
     });
 }
 
@@ -105,10 +121,12 @@ function enviarRespostes() {
   document.getElementById('barra-superior').style.display = 'none';
   document.querySelector('.progress').style.display = 'none';
   document.getElementById('barra-progres').classList.remove('animada');
+
   const dades = {};
   preguntesOriginals.forEach((pregunta, index) => {
     dades[pregunta.id] = respostesSeleccionades[index];
   });
+
   fetch('finalitza.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -151,8 +169,6 @@ function mostrarRanking() {
     });
 }
 
-document.getElementById('comencar').addEventListener('click', iniciarJoc);
-
 document.getElementById('anterior').addEventListener('click', () => {
   if (preguntaActual > 0) {
     mostrarPregunta(preguntaActual - 1);
@@ -185,5 +201,11 @@ document.getElementById('reiniciar').addEventListener('click', () => {
   document.getElementById('formulari').style.display = 'none';
   document.getElementById('barra-superior').style.display = 'none';
   document.querySelector('.progress').style.display = 'none';
+  preguntesOriginals = [];
+  respostesSeleccionades = [];
+  tempsInici = null;
   preguntaActual = 0;
+  nomUsuari = '';
+  document.getElementById('nom').value = '';
+  document.getElementById('comencar').disabled = true;
 });
