@@ -39,5 +39,18 @@
   </div>
 
   <script src="script.js"></script>
+
+  <script>
+    let enviat = false;
+    function bloquejarEnviament() {
+      if (enviat) return false;
+      enviat = true;
+      document.getElementById('enviar').disabled = true;
+      document.getElementById('enviar').innerText = "Enviant...";
+      return true;
+    }
+  </script>
+
+
 </body>
 </html>

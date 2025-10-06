@@ -245,10 +245,6 @@ document.getElementById('enviar').addEventListener('click', () => {
   enviarRespostes();
 });
 
-document.getElementById('enviar').addEventListener('click', () => {
-  enviarRespostes();
-});
-
 
 function reiniciarJoc() {
   // Oculta i neteja el resultat
