@@ -1,3 +1,5 @@
+document.addEventListener('DOMContentLoaded', () => {
+
 let preguntesOriginals = [];
 let respostesSeleccionades = [];
 let tempsInici = null;
@@ -65,7 +67,7 @@ function mostrarPregunta(index) {
     const checked = respostesSeleccionades[index] === valorOriginal ? 'checked' : '';
     bloc.innerHTML += `
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="pregunta" value="${valorOriginal}" id="${id}" ${checked}>
+        <input class="form-check-input" type="radio" name="pregunta${index}" value="${valorOriginal}" id="${id}" ${checked}>
         <label class="form-check-label" for="${id}">${resposta}</label>
       </div>
     `;
@@ -76,7 +78,7 @@ function mostrarPregunta(index) {
   document.getElementById('enviar').style.display = index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
 
   setTimeout(() => {
-    document.querySelectorAll('input[name="pregunta"]').forEach(input => {
+    document.querySelectorAll(`input[name="pregunta${index}"]`).forEach(input => {
       input.addEventListener('change', () => {
         respostesSeleccionades[index] = parseInt(input.value);
       });
@@ -92,22 +94,44 @@ function iniciarJoc() {
         alert('No s’han pogut carregar les preguntes.');
         return;
       }
+
       preguntesOriginals = preguntes;
       respostesSeleccionades = Array(preguntes.length).fill(null);
-      document.getElementById('resultat').innerText = '';
-      document.getElementById('reiniciar').style.display = 'none';
       tempsInici = Date.now();
       temporitzadorTimeout = setTimeout(enviarRespostes, tempsTotal);
       actualitzarTemporitzador();
-      document.getElementById('barra-superior').style.display = 'flex';
-      document.querySelector('.progress').style.display = 'block';
-      document.getElementById('barra-progres').classList.remove('animada');
-      void document.getElementById('barra-progres').offsetWidth;
-      document.getElementById('barra-progres').classList.add('animada');
-      document.getElementById('formulari').style.display = 'block';
-      document.getElementById('formular-inici').style.display = 'none';
-      document.getElementById('titol').style.display = 'none';
-      document.getElementById('intro').style.display = 'none';
+
+      const resultat = document.getElementById('resultat');
+      if (resultat) resultat.innerText = '';
+
+      const reiniciar = document.getElementById('reiniciar');
+      if (reiniciar) reiniciar.style.display = 'inline';
+
+      const barraSuperior = document.getElementById('barra-superior');
+      if (barraSuperior) barraSuperior.style.display = 'flex';
+
+      const progress = document.querySelector('.progress');
+      if (progress) progress.style.display = 'block';
+
+      const barraProgres = document.getElementById('barra-progres');
+      if (barraProgres) {
+        barraProgres.classList.remove('animada');
+        void barraProgres.offsetWidth;
+        barraProgres.classList.add('animada');
+      }
+
+      const formulari = document.getElementById('formulari');
+      if (formulari) formulari.style.display = 'block';
+
+      const formularInici = document.getElementById('formular-inici');
+      if (formularInici) formularInici.style.display = 'none';
+
+      const titol = document.getElementById('titol');
+      if (titol) titol.style.display = 'none';
+
+      const intro = document.getElementById('intro');
+      if (intro) intro.style.display = 'none';
+
       mostrarPregunta(0);
     })
     .catch(err => {
@@ -118,9 +142,6 @@ function iniciarJoc() {
 
 function enviarRespostes() {
   clearTimeout(temporitzadorTimeout);
-  document.getElementById('barra-superior').style.display = 'none';
-  document.querySelector('.progress').style.display = 'none';
-  document.getElementById('barra-progres').classList.remove('animada');
 
   const dades = {};
   preguntesOriginals.forEach((pregunta, index) => {
@@ -139,16 +160,35 @@ function enviarRespostes() {
     .then(res => res.json())
     .then(resultat => {
       const segonsTrencats = Math.floor((Date.now() - tempsInici) / 1000);
-      document.getElementById('resultat').innerHTML =
-        `<div class="alert alert-success">
+      const resultatDiv = document.getElementById('resultat');
+      resultatDiv.style.display = 'block';
+      resultatDiv.innerHTML = `
+        <div class="alert alert-success">
           <p>✅ Has encertat <strong>${resultat.correctes}</strong> de <strong>${resultat.total}</strong> preguntes.</p>
           <p>⏱️ Temps emprat: ${Math.floor(segonsTrencats / 60)} min ${segonsTrencats % 60} s</p>
-        </div>`;
+        </div>
+        <div id="ranking"></div>
+        <button id="tornarInici" class="btn btn-primary">🔄 Torna a l’inici</button>
+      `;
+
       document.getElementById('formulari').style.display = 'none';
-      document.getElementById('reiniciar').style.display = 'inline';
       mostrarRanking();
+
+      setTimeout(() => {
+        document.getElementById('tornarInici').addEventListener('click', reiniciarJoc);
+      }, 500);
+    })
+    .catch(err => {
+      console.error('Error carregant estadístiques:', err);
+      const resultatDiv = document.getElementById('resultat');
+      resultatDiv.style.display = 'block';
+      resultatDiv.innerHTML = `
+        <div class="alert alert-danger">
+          ❌ Error de connexió amb el servidor. Torna-ho a intentar més tard.
+        </div>`;
     });
 }
+
 
 function mostrarRanking() {
   fetch('ranking.php')
@@ -162,12 +202,18 @@ function mostrarRanking() {
         html += `<li><strong>${r.nom}</strong> — ${r.puntuacio} punts — ${segons}s</li>`;
       });
       html += '</ol>';
-      document.getElementById('resultat').innerHTML += html;
+
+      const rankingDiv = document.getElementById('ranking');
+      rankingDiv.innerHTML = html;
     })
     .catch(err => {
       console.error('Error carregant el rànquing:', err);
     });
 }
+
+
+
+
 
 document.getElementById('anterior').addEventListener('click', () => {
   if (preguntaActual > 0) {
@@ -181,31 +227,38 @@ document.getElementById('seguent').addEventListener('click', () => {
   }
 });
 
-document.getElementById('formulari').addEventListener('submit', (e) => {
-  e.preventDefault();
+document.getElementById('enviar').addEventListener('click', () => {
   enviarRespostes();
 });
 
-document.getElementById('reiniciar').addEventListener('click', () => {
-  clearTimeout(temporitzadorTimeout);
+document.getElementById('enviar').addEventListener('click', () => {
+  enviarRespostes();
+});
+
+
+function reiniciarJoc() {
+  document.getElementById('resultat').style.display = 'none';
+  document.getElementById('resultat').innerHTML = '';
+  document.getElementById('formular-inici').style.display = 'block';
   document.getElementById('comencar').style.display = 'inline';
   document.getElementById('titol').style.display = 'block';
   document.getElementById('intro').style.display = 'block';
-  document.getElementById('reiniciar').style.display = 'none';
-  document.getElementById('resultat').innerText = '';
-  document.getElementById('resum').innerText = '';
+  document.getElementById('nom').value = '';
+  document.getElementById('comencar').disabled = true;
+  document.getElementById('preguntes').innerHTML = '';
   document.getElementById('temporitzador').innerText = 'Temps restant: 00:30';
   document.getElementById('barra-progres').style.width = '0%';
   document.getElementById('barra-progres').classList.remove('animada');
-  document.getElementById('preguntes').innerHTML = '';
-  document.getElementById('formulari').style.display = 'none';
   document.getElementById('barra-superior').style.display = 'none';
   document.querySelector('.progress').style.display = 'none';
+  document.getElementById('formulari').style.display = 'none';
+
   preguntesOriginals = [];
   respostesSeleccionades = [];
   tempsInici = null;
   preguntaActual = 0;
   nomUsuari = '';
-  document.getElementById('nom').value = '';
-  document.getElementById('comencar').disabled = true;
+}
+
+
 });

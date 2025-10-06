@@ -208,3 +208,63 @@ button:hover:not(:disabled) {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* Formulari d'inici */
+#formular-inici {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  background-color: var(--color-turquesa-suau);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--ombra-suau);
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+#formular-inici input {
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--color-turquesa);
+  border-radius: var(--radius);
+  background-color: white;
+  color: var(--color-text);
+  box-shadow: var(--ombra-suau);
+  transition: border-color 0.3s ease;
+}
+
+#formular-inici input:focus {
+  outline: none;
+  border-color: var(--color-turquesa-fosc);
+}
+
+#formular-inici button {
+  align-self: center;
+  font-size: 1.1rem;
+  padding: 0.7rem 1.5rem;
+  background-color: var(--color-turquesa);
+}
+
+#formular-inici button:hover:not(:disabled) {
+  background-color: var(--color-turquesa-fosc);
+}
+
+/* Títol i introducció */
+#titol {
+  text-align: center;
+  font-size: 2rem;
+  color: var(--color-turquesa-fosc);
+  margin-bottom: 0.5rem;
+}
+
+#intro {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--color-error);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--ombra-suau);
+}

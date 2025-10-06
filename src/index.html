@@ -2,57 +2,40 @@
 <html lang="ca">
 <head>
   <meta charset="UTF-8">
-  <title>Qüestionari</title>
+  <title>Autoescola Donés</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="contenidor">
-    <h2 id="titol">Qüestionari</h2>
-    <p id="intro" style="color: red; font-weight: bold;">Aquesta és la versió actual del qüestionari</p>
+    <h2 id="titol">Test Carnet B</h2>
 
-    <!-- Formulari d'inici -->
     <form id="formular-inici">
       <input type="text" id="nom" placeholder="Introdueix el teu nom" required>
-      <button type="button" id="comencar" disabled>🎯 Comença</button>
+      <br>
+      <button type="button" id="comencar" disabled>Comença</button>
     </form>
 
-    <!-- Formulari del test -->
     <form id="formulari" style="display:none;">
-      <!-- Barra superior -->
       <div id="barra-superior">
         <span id="indicador">Pregunta 1 de 10</span>
         <span id="temporitzador">Temps restant: 00:30</span>
       </div>
 
-      <!-- Barra de progrés -->
       <div class="progress">
         <div id="barra-progres" class="progress-bar"></div>
       </div>
 
-      <!-- Preguntes -->
-      <div id="preguntes">
-        <!-- Aquí es carregaran les preguntes -->
-      </div>
+      <div id="preguntes"></div>
 
-      <!-- Navegació -->
       <div id="navegacio">
         <button type="button" id="anterior" class="btn">⬅️ Enrere</button>
         <button type="button" id="seguent" class="btn">Següent ➡️</button>
-        <button type="submit" id="enviar" class="btn">Enviar</button>
+        <button type="button" id="enviar" class="btn">Enviar</button>
       </div>
     </form>
 
-    <!-- Resultat -->
-    <div id="resultat" style="display:none;">
-      <h3>Resultats</h3>
-      <div id="resum"></div>
-      <ol></ol>
-      <div id="ranking">
-        <!-- Aquí es mostrarà el rànquing -->
-      </div>
-      <button id="reiniciar" style="display:none;">🔄 Torna a començar</button>
-    </div>
+    <div id="resultat" style="display:none;"></div>
   </div>
 
   <script src="script.js"></script>
