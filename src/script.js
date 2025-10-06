@@ -73,10 +73,23 @@ function mostrarPregunta(index) {
     `;
   });
   container.appendChild(bloc);
-  document.getElementById('anterior').disabled = index === 0;
-  document.getElementById('seguent').style.display = index === preguntesOriginals.length - 1 ? 'none' : 'inline-block';
-  document.getElementById('enviar').style.display = index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
 
+  // Botó "Enrere"
+  document.getElementById('anterior').disabled = index === 0;
+
+  // Botó "Següent" → ara amb classe .ocult en lloc de display:none
+  const seguentBtn = document.getElementById('seguent');
+  if (index === preguntesOriginals.length - 1) {
+    seguentBtn.classList.add('ocult');
+  } else {
+    seguentBtn.classList.remove('ocult');
+  }
+
+  // Botó "Enviar"
+  document.getElementById('enviar').style.display =
+    index === preguntesOriginals.length - 1 ? 'inline-block' : 'none';
+
+  // Guardar resposta seleccionada
   setTimeout(() => {
     document.querySelectorAll(`input[name="pregunta${index}"]`).forEach(input => {
       input.addEventListener('change', () => {
@@ -85,6 +98,7 @@ function mostrarPregunta(index) {
     });
   }, 100);
 }
+
 
 function iniciarJoc() {
   fetch('getPreguntes.php?n=10')
@@ -237,14 +251,28 @@ document.getElementById('enviar').addEventListener('click', () => {
 
 
 function reiniciarJoc() {
-  document.getElementById('resultat').style.display = 'none';
-  document.getElementById('resultat').innerHTML = '';
-  document.getElementById('formular-inici').style.display = 'block';
-  document.getElementById('comencar').style.display = 'inline';
+  // Oculta i neteja el resultat
+  const resultatDiv = document.getElementById('resultat');
+  resultatDiv.style.display = 'none';
+  resultatDiv.innerHTML = '';
+
+  // Mostra el formulari d'inici amb animació
+  const formularInici = document.getElementById('formular-inici');
+  formularInici.style.display = 'flex';
+  formularInici.style.opacity = '0'; // reinicia animació
+  formularInici.classList.remove('resultat-container'); // per si estava aplicada
+  void formularInici.offsetWidth; // forçar reflow
+  formularInici.classList.add('resultat-container'); // reaplica animació
+
+  // Restaura visibilitat del títol i introducció
   document.getElementById('titol').style.display = 'block';
   document.getElementById('intro').style.display = 'block';
+
+  // Restaura estat inicial
   document.getElementById('nom').value = '';
   document.getElementById('comencar').disabled = true;
+  document.getElementById('comencar').style.display = 'inline';
+
   document.getElementById('preguntes').innerHTML = '';
   document.getElementById('temporitzador').innerText = 'Temps restant: 00:30';
   document.getElementById('barra-progres').style.width = '0%';
@@ -253,12 +281,14 @@ function reiniciarJoc() {
   document.querySelector('.progress').style.display = 'none';
   document.getElementById('formulari').style.display = 'none';
 
+  // Reset de variables globals
   preguntesOriginals = [];
   respostesSeleccionades = [];
   tempsInici = null;
   preguntaActual = 0;
   nomUsuari = '';
 }
+
 
 
 });

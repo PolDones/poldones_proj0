@@ -2,53 +2,66 @@
 require 'connexio.php';
 
 $id = $_GET['id'] ?? null;
-if (!$id) die('ID no especificat.');
+if (!$id) {
+  die("ID no especificat.");
+}
+
+// Obtenir la pregunta
+$stmt = $pdo->prepare("SELECT * FROM preguntes WHERE id = ?");
+$stmt->execute([$id]);
+$pregunta = $stmt->fetch();
+
+if (!$pregunta) {
+  die("Pregunta no trobada.");
+}
+
+// Obtenir respostes
+$respostes = $pdo->prepare("SELECT * FROM respostes WHERE pregunta_id = ?");
+$respostes->execute([$id]);
+$respostes = $respostes->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $text = trim($_POST['text'] ?? '');
   $image = trim($_POST['image'] ?? '');
-  $respostes = $_POST['respostes'] ?? [];
-  $correcta = isset($_POST['correcta']) ? intval($_POST['correcta']) - 1 : -1;
+  $respostesForm = $_POST['respostes'] ?? [];
+  $correctaInput = $_POST['correcta'] ?? '';
+  $correcta = is_numeric($correctaInput) ? intval($correctaInput) - 1 : -1;
 
-  $respostesCompletes = array_filter($respostes, fn($r) => trim($r) !== '');
-  $indexValid = is_numeric($_POST['correcta']) && $correcta >= 0 && $correcta < 4;
+  if ($text !== '' && count(array_filter($respostesForm)) === 4 && $correcta >= 0 && $correcta < 4) {
+    $pdo->prepare("UPDATE preguntes SET text = ?, image_url = ? WHERE id = ?")
+        ->execute([$text, $image, $id]);
 
-  if ($text !== '' && count($respostesCompletes) === 4 && $indexValid) {
-    $pdo->prepare("UPDATE preguntes SET text = ?, image_url = ? WHERE id = ?")->execute([$text, $image, $id]);
-    $pdo->prepare("DELETE FROM respostes WHERE pregunta_id = ?")->execute([$id]);
-
-    foreach ($respostes as $i => $r) {
-      $pdo->prepare("INSERT INTO respostes (pregunta_id, text, es_correcta) VALUES (?, ?, ?)")
-          ->execute([$id, trim($r), $i === $correcta ? 1 : 0]);
+    foreach ($respostesForm as $i => $r) {
+      $pdo->prepare("UPDATE respostes SET text = ?, es_correcta = ? WHERE pregunta_id = ? AND id = ?")
+          ->execute([trim($r), $i === $correcta ? 1 : 0, $id, $respostes[$i]['id']]);
     }
 
-    echo "<p style='color:green;'>✅ Pregunta actualitzada.</p>";
-  } else {
-    echo "<p style='color:red;'>❌ Tots els camps són obligatoris excepte la URL d'imatge. Índex correcte entre 1 i 4.</p>";
+//    echo "<p style='color:green;'>✅ Pregunta actualitzada correctament.</p>";
+//  } else {
+//    echo "<p style='color:red;'>❌ Revisa els camps. Calen 4 respostes i un índex correcte (1–4).</p>";
   }
 }
-
-// Carregar pregunta i respostes
-$pregunta = $pdo->prepare("SELECT * FROM preguntes WHERE id = ?");
-$pregunta->execute([$id]);
-$p = $pregunta->fetch();
-
-$respostes = $pdo->prepare("SELECT * FROM respostes WHERE pregunta_id = ?");
-$respostes->execute([$id]);
-$r = $respostes->fetchAll();
 ?>
-
-<h2>Editar pregunta</h2>
-<form method="POST">
-  <input name="text" value="<?= htmlspecialchars($p['text']) ?>" placeholder="Pregunta"><br>
-  <input name="image" value="<?= htmlspecialchars($p['image_url']) ?>" placeholder="URL imatge (opcional)"><br>
-  <?php foreach ($r as $i => $resposta): ?>
-    <input name="respostes[]" value="<?= htmlspecialchars($resposta['text']) ?>" placeholder="Resposta <?= $i + 1 ?>"><br>
-  <?php endforeach ?>
-  <?php
-    $indexCorrecte = array_search(1, array_column($r, 'es_correcta'));
-  ?>
-  <input name="correcta" type="number" min="1" max="4" value="<?= $indexCorrecte + 1 ?>" placeholder="Índex correcta (1–4)"><br>
-  <button type="submit">Desar canvis</button>
-</form>
-<a href="admin.php">⬅️ Tornar</a>
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Pregunta</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="admin-container">
+    <h1>Editar Pregunta</h1>
+    <form method="POST">
+      <input name="text" value="<?= htmlspecialchars($pregunta['text']) ?>" placeholder="Pregunta">
+      <input name="image" value="<?= htmlspecialchars($pregunta['image_url']) ?>" placeholder="URL imatge (opcional)">
+      <?php foreach ($respostes as $i => $r): ?>
+        <input name="respostes[]" value="<?= htmlspecialchars($r['text']) ?>" placeholder="Resposta <?= $i+1 ?>">
+      <?php endforeach; ?>
+      <input name="correcta" type="number" min="1" max="4" value="<?= array_search(1, array_column($respostes, 'es_correcta'))+1 ?>" placeholder="Índex correcte (1–4)">
+      <button type="submit" class="btn btn-edit">💾 Guardar</button>
+      <a href="admin.php" class="btn btn-add">⬅️ Tornar</a>
+    </form>
+  </div>
+</body>
+</html>
